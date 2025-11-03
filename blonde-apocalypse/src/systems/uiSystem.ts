@@ -6,16 +6,24 @@ let gameOver = false;
 let elapsedTime = 0;
 let enemiesKilled = 0;
 
-// UI Element References
-const uiOverlay = document.getElementById('ui-overlay')!;
+// UI Element References - Caching them here causes the error.
+let uiOverlay: HTMLElement;
 let hpBar: HTMLDivElement;
 let scoreText: HTMLParagraphElement;
 let timerText: HTMLParagraphElement;
 let gameOverScreen: HTMLDivElement;
 let levelUpScreen: HTMLDivElement;
+let pauseMenu: HTMLDivElement;
 
 
 export function initUI() {
+    // Get the overlay element first
+    uiOverlay = document.getElementById('ui-overlay')!;
+    if (!uiOverlay) {
+        console.error("UI Overlay not found!");
+        return;
+    }
+
     uiOverlay.innerHTML = `
         <div id="hud">
             <div id="hp-container">
@@ -45,12 +53,14 @@ export function initUI() {
         </div>
     `;
 
-    // Cache UI elements
+    // Cache UI elements now that they exist in the DOM
     hpBar = document.getElementById('hp-bar-fg') as HTMLDivElement;
     scoreText = document.getElementById('score') as HTMLParagraphElement;
     timerText = document.getElementById('timer') as HTMLParagraphElement;
     gameOverScreen = document.getElementById('game-over') as HTMLDivElement;
     levelUpScreen = document.getElementById('level-up') as HTMLDivElement;
+    pauseMenu = document.getElementById('pause-menu') as HTMLDivElement;
+
 
     // Add event listener for the restart button
     document.getElementById('restart-button')?.addEventListener('click', () => {
@@ -127,6 +137,8 @@ export function initUI() {
 }
 
 export function updateUI(dt: number) {
+    // Ensure elements are cached before updating them
+    if (!hpBar || !scoreText || !timerText) return;
     if (isGamePaused()) return;
 
     // Update HP Bar
@@ -147,6 +159,7 @@ export function updateUI(dt: number) {
 }
 
 export function incrementKillCount() {
+    if (!scoreText) return;
     enemiesKilled++;
     scoreText.innerText = `Kills: ${enemiesKilled}`;
 }
@@ -164,7 +177,6 @@ function setGameOver() {
 
 function togglePause() {
     isPaused = !isPaused;
-    const pauseMenu = document.getElementById('pause-menu')!;
     pauseMenu.style.display = isPaused ? 'flex' : 'none';
 }
 
