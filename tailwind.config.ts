@@ -8,13 +8,10 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      colors: {
-        primary: "#1DE9B6",
-        'midnight-blue': "#0C1E3D",
-        'electric-teal': '#1DE9B6',
-      },
-      fontFamily: {
-        display: ["Manrope", "sans-serif"],
+      backgroundImage: {
+        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
+        "gradient-conic":
+          "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
       },
     },
   },
