@@ -1,0 +1,159 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id                  Int                 @id @default(autoincrement())
+  fullName            String
+  email               String              @unique
+  phone               String?
+  password            String
+  role                Role                @default(resident)
+  createdAt           DateTime            @default(now())
+  managedBuildings    Building[]          @relation("ManagerBuildings")
+  apartmentResidencies ApartmentResident[]
+  createdAnnouncements Announcement[]      @relation("CreatedAnnouncements")
+  createdTickets      Ticket[]            @relation("CreatedTickets")
+}
+
+model Building {
+  id                 Int            @id @default(autoincrement())
+  name               String
+  address            String
+  managerId          Int
+  subscriptionStatus String
+  createdAt          DateTime       @default(now())
+  manager            User           @relation("ManagerBuildings", fields: [managerId], references: [id])
+  apartments         Apartment[]
+  dues               Dues[]
+  announcements      Announcement[]
+  tickets            Ticket[]
+  expenses           Expense[]
+}
+
+model Apartment {
+  id                Int                 @id @default(autoincrement())
+  buildingId        Int
+  doorNo            String
+  floor             Int
+  label             String
+  defaultMonthlyDues Decimal
+  createdAt         DateTime            @default(now())
+  building          Building            @relation(fields: [buildingId], references: [id])
+  residents         ApartmentResident[]
+  duesItems         DuesItem[]
+  payments          Payment[]
+  tickets           Ticket[]
+}
+
+model ApartmentResident {
+  id          Int                  @id @default(autoincrement())
+  apartmentId Int
+  userId      Int
+  type        ApartmentResidentType
+  isActive    Boolean              @default(true)
+  apartment   Apartment            @relation(fields: [apartmentId], references: [id])
+  user        User                 @relation(fields: [userId], references: [id])
+}
+
+model Dues {
+  id         Int        @id @default(autoincrement())
+  buildingId Int
+  month      DateTime
+  title      String
+  amount     Decimal
+  createdAt  DateTime   @default(now())
+  building   Building   @relation(fields: [buildingId], references: [id])
+  duesItems  DuesItem[]
+}
+
+model DuesItem {
+  id          Int           @id @default(autoincrement())
+  duesId      Int
+  apartmentId Int
+  amount      Decimal
+  status      DuesItemStatus @default(unpaid)
+  dueDate     DateTime
+  notes       String?
+  dues        Dues          @relation(fields: [duesId], references: [id])
+  apartment   Apartment     @relation(fields: [apartmentId], references: [id])
+  payments    Payment[]
+}
+
+model Payment {
+  id           Int       @id @default(autoincrement())
+  duesItemId   Int
+  apartmentId  Int
+  amount       Decimal
+  paymentDate  DateTime
+  paymentMethod String
+  note         String?
+  duesItem     DuesItem  @relation(fields: [duesItemId], references: [id])
+  apartment    Apartment @relation(fields: [apartmentId], references: [id])
+}
+
+model Announcement {
+  id         Int      @id @default(autoincrement())
+  buildingId Int
+  title      String
+  content    String
+  createdAt  DateTime @default(now())
+  createdBy  Int
+  building   Building @relation(fields: [buildingId], references: [id])
+  creator    User     @relation("CreatedAnnouncements", fields: [createdBy], references: [id])
+}
+
+model Ticket {
+  id          Int          @id @default(autoincrement())
+  buildingId  Int
+  apartmentId Int
+  createdBy   Int
+  title       String
+  description String
+  status      TicketStatus @default(open)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  building    Building     @relation(fields: [buildingId], references: [id])
+  apartment   Apartment    @relation(fields: [apartmentId], references: [id])
+  creator     User         @relation("CreatedTickets", fields: [createdBy], references: [id])
+}
+
+model Expense {
+  id         Int      @id @default(autoincrement())
+  buildingId Int
+  title      String
+  amount     Decimal
+  date       DateTime
+  category   String
+  note       String?
+  building   Building @relation(fields: [buildingId], references: [id])
+}
+
+enum Role {
+  admin
+  manager
+  resident
+}
+
+enum ApartmentResidentType {
+  owner
+  tenant
+}
+
+enum DuesItemStatus {
+  unpaid
+  partial
+  paid
+}
+
+enum TicketStatus {
+  open
+  in_progress
+  resolved
+}
